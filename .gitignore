@@ -16,3 +16,7 @@
 
 # GoLand
 .idea/
+
+# Binary
+/imapdump
+/dist/
