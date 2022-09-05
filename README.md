@@ -2,7 +2,7 @@
 
 ![workflow badge](https://github.com/guoyk93/imapdump/actions/workflows/go.yml/badge.svg) [![Go Reference](https://pkg.go.dev/badge/github.com/guoyk93/imapdump.svg)](https://pkg.go.dev/github.com/guoyk93/imapdump)
 
-A tool for dumping emails in batch.
+A tool for dumping emails to local in batch.
 
 ## Usage
 
