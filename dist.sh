@@ -11,8 +11,8 @@ build() {
   export GOOS=$1
   export GOARCH=$2
   export CGO_ENABLED=0
-  FILENAME="gitdump-${GOOS}-${GOARCH}"
-  go build -o "dist/${FILENAME}" ./cmd/gitdump
+  FILENAME="imapdump-${GOOS}-${GOARCH}"
+  go build -o "dist/${FILENAME}" ./cmd/imapdump
   cd dist
   tar czvf "${FILENAME}.tar.gz" "${FILENAME}"
   rm -f "${FILENAME}"
