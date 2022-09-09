@@ -6,7 +6,7 @@ A tool for dumping emails to local in batch.
 
 ## 中文使用说明
 
-* [imapdump - 批量备份邮件到本地](https://mp.weixin.qq.com/s?__biz=Mzg2ODIyNzg2Ng==&mid=2247483664&idx=1&sn=1748de50e7acff3738f6c03971b77b1e&chksm=ceaecf65f9d946733c3d06d28d43461469f61c303b06eff75c68d7d720ddd49363dc85b4a495#rd)
+* [imapdump - 批量备份邮件到本地](https://mp.weixin.qq.com/s/q-BAjuInDjc6hkpotHtRPg)
 
 ## Usage
 
