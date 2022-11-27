@@ -21,7 +21,7 @@ A tool for dumping emails to local in batch.
 ```yaml
 dir: dump
 accounts:
-    # name, name of the subdirectory
+  # name, name of the subdirectory
   - name: username@mydomain.com
     # host, host and port for IMAP server, must be TLS
     host: imap.mydomain.com:993
@@ -34,6 +34,16 @@ accounts:
       - Archive # this will match 'Archive', 'Archives', 'Archived' and 'Archives/2022' etc
       - 存档
 ```
+
+## Container Image
+
+Check [GitHub Packages](https://github.com/guoyk93/imapdump/pkgs/container/imapdump) for available container images
+
+Check [Dockerfile](Dockerfile) for details
+
+By default, container image will execute `imapdump` every `6 hours`
+
+All you need to do is to mount `/data` for data persistence, and put a `config.yaml` at `/data/config.yaml`
 
 ## Notification
 
