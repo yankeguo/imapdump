@@ -38,8 +38,6 @@ func main() {
 
 	opts := grace.Must(graceconf.LoadYAMLFlagConf[Options]())
 
-	_ = gracemain.WriteLastRun(opts.Dir)
-
 	for _, account := range opts.Accounts {
 		log.Println("started:", account.Name)
 		if err = imapdump.DumpAccount(ctx, imapdump.DumpAccountOptions{
