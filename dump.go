@@ -37,7 +37,7 @@ func DumpMessagePathExisted(dir string, msg *imap.Message) (ok bool, err error) 
 func DumpMessage(dir string, msg *imap.Message) (err error) {
 	file := DumpMessagePath(dir, msg)
 
-	tmpFile := file + ".tmp"
+	tmpFile := filepath.Join(os.TempDir(), file+".tmp")
 	defer os.RemoveAll(tmpFile)
 
 	if err = os.MkdirAll(filepath.Dir(file), 0755); err != nil {
