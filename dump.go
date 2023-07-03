@@ -2,8 +2,6 @@ package imapdump
 
 import (
 	"context"
-	"crypto/md5"
-	"encoding/hex"
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 	"github.com/guoyk93/rg"
@@ -40,10 +38,7 @@ func DumpMessage(dir string, msg *imap.Message) (err error) {
 		return
 	}
 
-	buf := md5.Sum([]byte(msg.Envelope.MessageId))
-
-	// create temp file
-	tmpFile := filepath.Join(os.TempDir(), "imapdump-"+hex.EncodeToString(buf[:])+".tmp")
+	tmpFile := file + ".tmp"
 	defer os.RemoveAll(tmpFile)
 
 	r := msg.GetBody(&imap.BodySectionName{})
