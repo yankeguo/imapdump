@@ -2,6 +2,8 @@ package imapdump
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 	"github.com/guoyk93/rg"
@@ -9,6 +11,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -16,6 +19,26 @@ func DumpMessagePath(dir string, msg *imap.Message) string {
 	year := msg.Envelope.Date.Format("2006")
 	month := msg.Envelope.Date.Format("01")
 	id := SanitizeMessageID(msg.Envelope.MessageId)
+	if id == "" {
+		// extract first from
+		from := "unknown@unknown.com"
+		if len(msg.Envelope.From) > 0 {
+			from = strings.ToLower(msg.Envelope.From[0].Address())
+		}
+		// digest date, from addresses, to addesses, subject
+		h := md5.New()
+		_, _ = h.Write([]byte(strconv.FormatInt(msg.Envelope.Date.Unix(), 10)))
+		for _, addr := range msg.Envelope.From {
+			_, _ = h.Write([]byte(addr.Address()))
+		}
+		for _, addr := range msg.Envelope.To {
+			_, _ = h.Write([]byte(addr.Address()))
+		}
+		_, _ = h.Write([]byte(msg.Envelope.Subject))
+		digest := hex.EncodeToString(h.Sum(nil))
+		// build a id
+		id = msg.Envelope.Date.UTC().Format("20060102150405") + "-" + from + "-" + digest
+	}
 	return filepath.Join(dir, year, month, id+".eml")
 }
 
