@@ -2,14 +2,17 @@ package main
 
 import (
 	"context"
-	"github.com/guoyk93/grace"
-	"github.com/guoyk93/grace/graceconf"
-	"github.com/guoyk93/grace/gracemain"
-	"github.com/guoyk93/grace/gracenotify"
-	"github.com/guoyk93/grace/gracetrack"
+	"flag"
+	"github.com/creasty/defaults"
+	"github.com/go-playground/validator/v10"
 	"github.com/guoyk93/imapdump"
+	"github.com/guoyk93/rg"
+	"gopkg.in/yaml.v3"
 	"log"
+	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 )
 
 type Options struct {
@@ -24,19 +27,41 @@ type Options struct {
 }
 
 func main() {
+	var err error
+	defer func() {
+		if err == nil {
+			return
+		}
+		log.Println("exited with error:", err.Error())
+		os.Exit(1)
+	}()
+	defer rg.Guard(&err)
+
+	var ctx context.Context
+	{
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithCancel(context.Background())
+		go func() {
+			chSig := make(chan os.Signal, 1)
+			signal.Notify(chSig, syscall.SIGTERM, syscall.SIGINT)
+			sig := <-chSig
+			log.Println("received signal:", sig.String())
+			cancel()
+		}()
+	}
+
 	var (
-		err error
-
-		ctx, _ = gracemain.WithSignalCancel(
-			gracetrack.Init(context.Background()),
-		)
+		optConf string
 	)
+	flag.StringVar(&optConf, "conf", "config.yaml", "config file")
+	flag.Parse()
 
-	defer gracemain.Exit(&err)
-	defer gracenotify.Notify("[IMAPDUMP]", &ctx, &err)
-	defer grace.Guard(&err)
+	buf := rg.Must(os.ReadFile(optConf))
 
-	opts := grace.Must(graceconf.LoadYAMLFlagConf[Options]())
+	var opts Options
+	rg.Must0(yaml.Unmarshal(buf, &opts))
+	rg.Must0(defaults.Set(&opts))
+	rg.Must0(validator.New().Struct(&opts))
 
 	for _, account := range opts.Accounts {
 		log.Println("started:", account.Name)

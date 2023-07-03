@@ -4,13 +4,11 @@ import (
 	"context"
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
-	"github.com/guoyk93/grace"
-	"github.com/guoyk93/grace/gracetrack"
+	"github.com/guoyk93/rg"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync/atomic"
 )
@@ -83,9 +81,9 @@ type DumpAccountOptions struct {
 }
 
 func DumpAccountMailbox(ctx context.Context, dir string, c *client.Client, mailbox string) (count int64, err error) {
-	defer grace.Guard(&err)
+	defer rg.Guard(&err)
 
-	status := grace.Must(c.Select(mailbox, true))
+	status := rg.Must(c.Select(mailbox, true))
 	log.Println("mailbox selected:", status.Name, "messages:", status.Messages)
 
 	if status.Messages == 0 {
@@ -119,7 +117,7 @@ outerLoopMsg:
 			if msg == nil {
 				continue outerLoopMsg
 			}
-			ok := grace.Must(DumpMessagePathExisted(dir, msg))
+			ok := rg.Must(DumpMessagePathExisted(dir, msg))
 			if ok {
 				continue outerLoopMsg
 			}
@@ -159,7 +157,7 @@ outerLoopMsg:
 					continue outerLoopDump
 				}
 				atomic.AddInt64(&count, 1)
-				grace.Must0(DumpMessage(dir, msg))
+				rg.Must0(DumpMessage(dir, msg))
 			}
 		}
 	}
@@ -167,21 +165,19 @@ outerLoopMsg:
 }
 
 func DumpAccount(ctx context.Context, opts DumpAccountOptions) (err error) {
-	defer grace.Guard(&err)
+	defer rg.Guard(&err)
 
-	tg := gracetrack.Group(ctx, opts.DisplayName).SetName(opts.DisplayName)
-
-	c := grace.Must(client.DialTLS(opts.Host, nil))
+	c := rg.Must(client.DialTLS(opts.Host, nil))
 	defer c.Close()
 
 	log.Println("dialed:", opts.Host)
 
-	grace.Must0(c.Login(opts.Username, opts.Password))
+	rg.Must0(c.Login(opts.Username, opts.Password))
 	defer c.Logout()
 
 	log.Println("signed in:", opts.Username)
 
-	grace.MustContext(ctx)
+	rg.Must0(ctx.Err())
 
 	var mailboxes []string
 
@@ -220,21 +216,17 @@ func DumpAccount(ctx context.Context, opts DumpAccountOptions) (err error) {
 		}
 	}
 
-	tg.Add("mailboxes: " + strings.Join(mailboxes, ", "))
-
 	var count int64
 
-	defer func() {
-		tg.Add("messages dumped: " + strconv.FormatInt(count, 10))
-	}()
-
 	for _, mailbox := range mailboxes {
-		grace.MustContext(ctx)
+		rg.Must0(ctx.Err())
 
-		count += grace.Must(
+		count += rg.Must(
 			DumpAccountMailbox(ctx, opts.Dir, c, mailbox),
 		)
 	}
+
+	log.Println("dumped:", count, "messages")
 
 	return
 }
