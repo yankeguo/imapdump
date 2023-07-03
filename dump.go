@@ -221,6 +221,8 @@ func DumpAccount(ctx context.Context, opts DumpAccountOptions) (err error) {
 	for _, mailbox := range mailboxes {
 		rg.Must0(ctx.Err())
 
+		log.Println("dump mailbox:", mailbox)
+
 		count += rg.Must(
 			DumpAccountMailbox(ctx, opts.Dir, c, mailbox),
 		)
