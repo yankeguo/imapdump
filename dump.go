@@ -2,6 +2,8 @@ package imapdump
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 	"github.com/guoyk93/rg"
@@ -10,7 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync/atomic"
 )
 
 func DumpMessagePath(dir string, msg *imap.Message) string {
@@ -35,14 +36,18 @@ func DumpMessagePathExisted(dir string, msg *imap.Message) (ok bool, err error) 
 func DumpMessage(dir string, msg *imap.Message) (err error) {
 	file := DumpMessagePath(dir, msg)
 
-	tmpFile := filepath.Join(os.TempDir(), file+".tmp")
-	defer os.RemoveAll(tmpFile)
-
 	if err = os.MkdirAll(filepath.Dir(file), 0755); err != nil {
 		return
 	}
 
+	buf := md5.Sum([]byte(msg.Envelope.MessageId))
+
+	// create temp file
+	tmpFile := filepath.Join(os.TempDir(), "imapdump-"+hex.EncodeToString(buf[:])+".tmp")
+	defer os.RemoveAll(tmpFile)
+
 	r := msg.GetBody(&imap.BodySectionName{})
+
 	if r == nil {
 		log.Println("message does not have a body:", msg.Envelope.MessageId)
 		return
@@ -52,15 +57,12 @@ func DumpMessage(dir string, msg *imap.Message) (err error) {
 	if f, err = os.OpenFile(tmpFile, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0640); err != nil {
 		return
 	}
-	defer func() {
-		if err == nil {
-			return
-		}
-		_ = os.RemoveAll(file)
-	}()
-	defer f.Close()
 
-	if _, err = io.Copy(f, r); err != nil {
+	_, err = io.Copy(f, r)
+
+	_ = f.Close()
+
+	if err != nil {
 		return
 	}
 
@@ -84,7 +86,7 @@ func DumpAccountMailbox(ctx context.Context, dir string, c *client.Client, mailb
 	defer rg.Guard(&err)
 
 	status := rg.Must(c.Select(mailbox, true))
-	log.Println("mailbox selected:", status.Name, "messages:", status.Messages)
+	log.Printf("[%s]: %d total", status.Name, status.Messages)
 
 	if status.Messages == 0 {
 		return
@@ -100,7 +102,10 @@ func DumpAccountMailbox(ctx context.Context, dir string, c *client.Client, mailb
 		chErr <- c.Fetch(seq, []imap.FetchItem{imap.FetchEnvelope, imap.FetchUid}, chMsg)
 	}()
 
-	seqDL := new(imap.SeqSet)
+	var (
+		seqDL = new(imap.SeqSet)
+		numDL int64
+	)
 
 outerLoopMsg:
 	for {
@@ -121,6 +126,7 @@ outerLoopMsg:
 			if ok {
 				continue outerLoopMsg
 			}
+			numDL += 1
 			seqDL.AddNum(msg.Uid)
 		}
 	}
@@ -129,7 +135,7 @@ outerLoopMsg:
 		return
 	}
 
-	log.Println("dump messages:", seqDL.String())
+	log.Printf("[%s]: %d to download", mailbox, numDL)
 
 	{
 		chMsg := make(chan *imap.Message)
@@ -156,8 +162,9 @@ outerLoopMsg:
 				if msg == nil {
 					continue outerLoopDump
 				}
-				atomic.AddInt64(&count, 1)
+				count += 1
 				rg.Must0(DumpMessage(dir, msg))
+				log.Printf("[%s]: %d/%d", mailbox, count, numDL)
 			}
 		}
 	}
@@ -204,10 +211,10 @@ func DumpAccount(ctx context.Context, opts DumpAccountOptions) (err error) {
 				if box == nil {
 					continue outerLoopBox
 				}
-				log.Println("found mailbox:", box.Name)
+				log.Printf("found [%s]", box.Name)
 				for _, prefix := range opts.Prefixes {
 					if strings.HasPrefix(box.Name, prefix) {
-						log.Println("found matched mailbox:", box.Name)
+						log.Printf("matched [%s]", box.Name)
 						mailboxes = append(mailboxes, box.Name)
 						break
 					}
@@ -221,11 +228,7 @@ func DumpAccount(ctx context.Context, opts DumpAccountOptions) (err error) {
 	for _, mailbox := range mailboxes {
 		rg.Must0(ctx.Err())
 
-		log.Println("dump mailbox:", mailbox)
-
-		count += rg.Must(
-			DumpAccountMailbox(ctx, opts.Dir, c, mailbox),
-		)
+		count += rg.Must(DumpAccountMailbox(ctx, opts.Dir, c, mailbox))
 	}
 
 	log.Println("dumped:", count, "messages")

@@ -64,7 +64,7 @@ func main() {
 	rg.Must0(validator.New().Struct(&opts))
 
 	for _, account := range opts.Accounts {
-		log.Println("started:", account.Name)
+		log.Println("account:", account.Name)
 		if err = imapdump.DumpAccount(ctx, imapdump.DumpAccountOptions{
 			DisplayName: account.Name,
 			Dir:         filepath.Join(opts.Dir, account.Name),
