@@ -4,7 +4,19 @@ WORKDIR /go/src/app
 ADD . .
 RUN go build -o /imapdump ./cmd/imapdump
 
-FROM ghcr.io/guoyk93/acicn/alpine:3.16
+FROM guoyk/minit:1.11.1 AS minit
+
+FROM alpine:3.18
+
+# install packages
+RUN apk add --no-cache tzdata ca-certificates
+
+# install minit
+RUN mkdir -p /opt/bin
+ENV PATH "/opt/bin:${PATH}"
+COPY --from=minit /minit /opt/bin/minit
+ENV MINIT_LOG_DIR none
+ENTRYPOINT ["/opt/bin/minit"]
 
 WORKDIR /data
 
