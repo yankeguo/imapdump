@@ -1,6 +1,6 @@
 # imapdump
 
-![workflow badge](https://github.com/guoyk93/imapdump/actions/workflows/go.yml/badge.svg) [![Go Reference](https://pkg.go.dev/badge/github.com/guoyk93/imapdump.svg)](https://pkg.go.dev/github.com/guoyk93/imapdump)
+![workflow badge](https://github.com/yankeguo/imapdump/actions/workflows/go.yml/badge.svg) [![Go Reference](https://pkg.go.dev/badge/github.com/yankeguo/imapdump.svg)](https://pkg.go.dev/github.com/yankeguo/imapdump)
 
 A tool for dumping emails to local in batch.
 
@@ -37,7 +37,7 @@ accounts:
 
 ## Container Image
 
-Check [GitHub Packages](https://github.com/guoyk93/imapdump/pkgs/container/imapdump) for available container images
+Check [GitHub Packages](https://github.com/yankeguo/imapdump/pkgs/container/imapdump) for available container images
 
 Check [Dockerfile](Dockerfile) for details
 
@@ -52,10 +52,6 @@ Execution result will be delivered to environment variable `$NOTIFY_URL`, if giv
 ```
 {"text": "MESSAGE..."}
 ```
-
-## Donation
-
-View https://guoyk.xyz/donation
 
 ## Credits
 

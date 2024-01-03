@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
-	"github.com/guoyk93/rg"
+	"github.com/yankeguo/rg"
 	"io"
 	"log"
 	"os"
