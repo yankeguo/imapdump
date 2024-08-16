@@ -4,9 +4,7 @@
 
 A tool for dumping emails to local in batch.
 
-## 中文使用说明
-
-- [imapdump - 批量备份邮件到本地](https://mp.weixin.qq.com/s/q-BAjuInDjc6hkpotHtRPg)
+[中文文档](README.zh.md)
 
 ## Usage
 
@@ -44,14 +42,6 @@ Check [Dockerfile](Dockerfile) for details
 By default, container image will execute `imapdump` every `6 hours`
 
 All you need to do is to mount `/data` for data persistence, and put a `config.yaml` at `/data/config.yaml`
-
-## Notification
-
-Execution result will be delivered to environment variable `$NOTIFY_URL`, if given, by HTTP `POST`.
-
-```
-{"text": "MESSAGE..."}
-```
 
 ## Credits
 
